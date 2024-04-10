@@ -55,7 +55,6 @@ def my_index():
 
 
 mail = Mail(app)
-init_app(app)
 
 class Event(db.Model):
     sno = db.Column(db.Integer, primary_key=True)
