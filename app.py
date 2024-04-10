@@ -1,13 +1,32 @@
 from flask import Flask, render_template, request, redirect, url_for, session,flash
+from flask import Flask, render_template, request, jsonify, url_for, redirect
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail, Message
 import secrets
 import datetime
 
 from flask_migrate import Migrate
+from flask_mail import Mail, Message
+from mail import init_app, send_email
+import random
+from reportlab.pdfgen import canvas
+from io import BytesIO
+import base64
+
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:@localhost/datahub'  # MySQL database URL
+
+
+app.config.update(
+    MAIL_SERVER = 'smtp.gmail.com',
+    MAIL_PORT = '587',
+    MAIL_USE_TLS = True,
+    MAIL_USERNAME = 'hackhustler58@gmail.com',
+    MAIL_PASSWORD = 'qeic vozg gtlb rhvw',
+    MAIL_DEFAULT_SENDER = 'hackhustler58@gmail.com' 
+    )
+
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 with app.app_context():
@@ -35,6 +54,8 @@ def my_index():
 
 
 
+mail = Mail(app)
+init_app(app)
 
 class Event(db.Model):
     sno = db.Column(db.Integer, primary_key=True)
@@ -272,3 +293,66 @@ def add_user():
 if __name__ == '__main__':
     app.run(debug=True)
 
+
+
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+
+
+#@app.route("/send", methods=['GET', 'POST'])
+#def send_mail():
+ #   error=None
+  #  if request.method == 'POST':
+   #     email = request.form.get('recipient')
+   #     subject = request.form.get('subject')
+   #     message = request.form.get('message')  # Retrieve message from form
+   #     if not email:
+   #         error="Enter your email"
+   #     else:
+   #         mail.send_message(subject,  # Use subject as the subject of the email
+   #                           sender=("Your Name", "your-email@example.com"),
+   #                           recipients=[email],  # Pass email address as a list
+   #                           body=message)  # Use message as the body of the email
+   #         return render_template('index.html')
+   # return render_template('index.html',error=error)
+
+def generate_pdf():
+    buffer = BytesIO()
+    p = canvas.Canvas(buffer)
+    p.drawString(100, 750, "Hello, this is an auto-generated PDF!")
+    p.save()
+    buffer.seek(0)
+    return buffer
+
+
+@app.route("/send", methods=['GET', 'POST'])
+def send_mail():
+    error = None
+    if request.method == 'POST':
+        email = request.form.get('recipient')
+        subject = request.form.get('subject')
+        message = request.form.get('message')
+        if not email:
+            error = "Enter your email"
+        else:
+            # Generate PDF
+            pdf_buffer = generate_pdf()
+
+            # Attach PDF to email
+            msg = Message(subject,
+                          sender=("Your Name", "your-email@example.com"),
+                          recipients=[email])
+            msg.body = message
+            msg.attach("document.pdf", "application/pdf", pdf_buffer.getvalue())
+
+            # Send email
+            mail.send(msg)
+            return render_template('mail.html')
+    return render_template('mail.html', error=error)
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
