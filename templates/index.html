@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+  <title>Login and Registration Form</title>
+
+  <link rel="stylesheet" href="/static/style1.css">
+
+</head>
+
+<body>
+    <input type="radio" id="loginForm" name="formToggle" checked>
+<input type="radio" id="registerForm" name="formToggle">
+<input type="radio" id="forgotForm" name="formToggle">
+
+<div class="wrapper" id="loginFormContent">
+  <form action="/login" method="POST"> 
+    <h1>Login</h1>
+    
+    <div class="input-box">
+      <input type="email" name="email" placeholder="Email" required> 
+    </div>
+    <div class="input-box">
+      <input type="password" name="password" placeholder="Password" required> 
+    </div>
+    <div class="checkbox1">
+      <label><input type="checkbox">Remember Me</label>
+      <label for="forgotForm">Forgot Password</label>
+    </div>
+    <button type="submit" class="btn">Login</button>
+    <div class="link">
+      <p>Are you an admin ? <label for="registerForm">Admin Login</label></p>
+    </div>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </form>
+</div>
+
+    </div>
+    
+
+  <div class="wrapper" id="registerFormContent">
+
+    <form action="/adminlogin" method="POST">
+
+      <h1>Admin </h1>
+
+      
+      <div class="input-box">
+
+        <input type="email" name="email" placeholder="Email" required>
+
+        
+
+      </div>
+
+      <div class="input-box">
+
+        <input type="password" name="password" placeholder="Password" required>
+
+        
+
+      </div>
+
+      
+      <button type="submit" class="btn">Login</button>
+
+      <div class="link">
+
+        <p>Not an admin? <label for="loginForm">User Login</label></p>
+
+      </div>
+      {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    </form>
+
+  </div>
+
+  <div class="wrapper" id="forgotFormContent">
+    <form action="/forgotpass" method="POST"> <!-- Changed action to the route handling password reset -->
+      <h1>Reset your password</h1>
+      <div class="input-box">
+        <input type="email" name="email" placeholder="Email" required> <!-- Added input field for email -->
+      </div>
+      <div class="link">
+        <button type="submit" class="btn"><a href="/templates/file4(OTP).html">Send Request</a></button>
+      </div>
+      <div class="link">
+        <p>Are you an admin? <a href="#" id="adminLoginLink">Admin Login</a></p> <!-- Changed label to a link -->
+      </div>
+      {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    </form>
+  </div>
+
+  
+</div>
+
+</body>
+
+</html>

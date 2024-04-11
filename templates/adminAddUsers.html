@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management</title>
+</head>
+<body>
+    <h1>User Management</h1>
+    
+    <!-- Add User Form -->
+    <h2>Add User</h2>
+    <form action="/add_user" method="POST">
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required>
+        <button type="submit">Add User</button>
+    </form>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <h1>Admin Users</h1>
+
+    <!-- Search Users Form -->
+    <form id="searchForm" action="/search_users" method="GET">
+        <label for="search">Search:</label>
+        <input type="text" id="search" name="search" value="{{ search_term }}">
+        <button type="submit">Search</button>
+    </form>
+
+    <!-- Display Users -->
+    <h2>All Users</h2>
+    <ul>
+        {% for user in users %}
+            <li>{{ user.email }}</li>
+        {% endfor %}
+    </ul>
+
+    <script>
+        // Get the search input field
+        var searchInput = document.getElementById("search");
+
+        // Submit the form when the search term changes
+        searchInput.addEventListener("input", function() {
+            document.getElementById("searchForm").submit();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,162 @@
+
+
+
+
+*{
+    margin:0;
+    padding:0;
+  }
+  
+  .adminrepage{   
+    min-height: 100vh;
+    background-color: #F8F9FC;
+    
+    
+  }
+
+.outerflex{
+    display: flex;
+    gap:40px;
+    align-items: center;
+    justify-content: center;
+    margin-top: 50px;
+}
+
+.flexbox123{
+    height:120px;
+    background-color: #FFFFFF;
+    width:20%;
+    border-radius: 8px;
+    box-shadow: 10px,#0000;
+    
+}
+
+.lowerBox{
+    display: flex;
+    margin-top: 50px;
+    justify-content: center;
+    align-items: center;
+    gap:20px;
+
+}
+
+.showCountdata{
+    width:62%;
+    min-height:400px;
+    max-height: fit-content;
+    
+    background-color:#FFFFFF;
+}
+
+.winChart{
+    width:25%;
+    height:400px;
+   
+    background-color: #FFFFFF;
+
+}
+
+.innerT{
+    height:55px;
+    background-color: #dcddde;
+    display: flex;
+    align-items: center;
+    padding-left:  30px;
+}
+
+.innerT h4{
+    color:rgb(42, 151, 247);
+    align-self: center;
+    size: 15px;
+}
+
+
+
+#box11,
+#box22,
+#box33,
+#box44,
+.showCountdata,
+.winChart {
+    box-shadow: 0px 2px 14px rgba(0, 0, 0, 0.1); /* Adjust shadow color and intensity as needed */
+}
+
+#box11 {
+    border-left: 5px solid rgb(246, 77, 77); /* Adjust border color and width as needed */
+}
+
+#box22 {
+    border-left: 5px solid rgb(0, 174, 255); /* Adjust border color and width as needed */
+}
+
+#box33 {
+    border-left: 5px solid yellow; /* Adjust border color and width as needed */
+}
+
+#box44 {
+    border-left: 5px solid rgb(39, 124, 36); /* Adjust border color and width as needed */
+}
+
+.box12 ,
+.flexbox123,
+#box33,#box44 {
+    justify-content: center;
+    align-content: center;
+}
+
+.box12,
+.box12{
+    display: flex;
+    flex-direction: column;
+
+}
+
+.enbutton{
+    align-self: center;
+    margin:10px;
+    width:43%;
+    height:30px;
+    background-color: rgb(171, 236, 245);
+    border-radius: 5px;
+}
+
+
+
+.winChart{
+    width:25%;
+    height:400px;
+   
+    background-color: #FFFFFF;
+
+}
+
+.innerT table{
+    width:80%;
+    height: fit-content;
+    min-height: 600px;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px auto; /* Center the table and add margin from top */
+}
+
+th, td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+tr:hover {
+    background-color: #f2f2f2;
+}
+
+th {
+    background-color: #f2f2f2;
+    color: #333;
+    width: 25%; /* Adjust width as needed */
+}
+
+.innerT {
+    overflow-x: auto;
+}
