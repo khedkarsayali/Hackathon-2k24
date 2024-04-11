@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session,fl
 from flask import Flask, render_template, request, jsonify, url_for, redirect
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail, Message
+from flask_login import login_required
 import secrets
 import datetime
 import random
@@ -46,7 +47,7 @@ app.config.update(
     MAIL_PORT = 587,
     MAIL_USE_TLS = True,
     MAIL_USERNAME = 'hackhustler58@gmail.com',
-    MAIL_PASSWORD = 'hackhustler@6',
+    MAIL_PASSWORD = 'qeic vozg gtlb rhvw',
     MAIL_DEFAULT_SENDER = 'hackhustler58@gmail.com'
 )
 
@@ -410,18 +411,24 @@ def rejected_events():
 
 
 
-
-
 @app.route('/hall_requests_user', methods=['GET', 'POST'])
+@login_required  # Ensure that the user is logged in
 def hall_requests_user():
     search_query = request.args.get('q', '')
 
-    # Query the database to retrieve all requests
-    all_hall_requests = Event.query.filter(Event.event_date >= datetime.now())
+    # Ensure that the user's email is in the session
+    if 'email' not in session:
+        flash('Please log in to view your events', 'warning')
+        return redirect(url_for('login'))
 
-    # Filter events based on search criteria
+    user_email = session['email']  # Get the user's email from the session
+
+    # Query the database to retrieve events associated with the user's email
+    user_events = Event.query.filter_by(email=user_email)
+
+    # Apply additional filters based on search criteria
     if search_query:
-        all_hall_requests = all_hall_requests.filter(
+        user_events = user_events.filter(
             or_(
                 Event.manager_name.ilike(f'%{search_query}%'),
                 Event.event_name.ilike(f'%{search_query}%'),
@@ -430,12 +437,10 @@ def hall_requests_user():
             )
         )
 
-    all_hall_requests = all_hall_requests.all()
+    user_events = user_events.all()
 
-    # Render the template with the filtered requests data
-    return render_template('user_display.html', all_hall_requests=all_hall_requests)
-
-
+    # Render the template with the filtered events data
+    return render_template('user_display.html', all_hall_requests=user_events)
 
 @app.route('/view_event_user/<int:event_id>')
 def view_event_user(event_id):
@@ -504,15 +509,6 @@ def is_overlapping(event_date, new_start_str, new_end_str, hall_name):
             (new_start <= start_time and new_end >= end_time):
                 return True
     return False
-
-
-       
-
-
-
-
-
-
 
 
 @app.route('/confirm_cancel/<int:event_id>', methods=['POST'])
