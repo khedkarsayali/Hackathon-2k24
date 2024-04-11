@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Details</title>
+    <style>
+        /* CSS styles for the buttons */
+        .button-container {
+            margin-top: 20px;
+        }
+        .button-container a {
+            display: inline-block;
+            margin-right: 10px;
+            padding: 8px 16px;
+            text-decoration: none;
+            color: #fff;
+            background-color: #007bff;
+            border: 1px solid #007bff;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .button-container a:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Event Details</h1>
+    <p><strong>Event Name:</strong> {{ event.event_name }}</p>
+    <p><strong>Manager Name:</strong> {{ event.manager_name }}</p>
+    <p><strong>Club Name:</strong> {{ event.club_name }}</p>
+    <p><strong>Event Date:</strong> {{ event.event_date }}</p>
+    <p><strong>Start Time:</strong> {{ event.start_time }}</p>
+    <p><strong>End Time:</strong> {{ event.end_time }}</p>
+    <p><strong>Hall Name:</strong> {{ event.hall_name }}</p>
+    <p><strong>Email:</strong> {{ event.email }}</p>
+    <p><strong>Phone Number:</strong> {{ event.ph_num }}</p>
+    <p><strong>Department:</strong> {{ event.department }}</p>
+    <p><strong>Request Time:</strong> {{ event.request }}</p>
+    <p><strong>Status:</strong> {{ event.status }}</p>
+
+    <!-- Buttons for approve, reject, and back to hall_requests -->
+    <div class="button-container">
+       
+       
+      
+        <a href="{{ url_for('hall_requests') }}" class="all-events-btn">All Events</a>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        // Function to handle click event on Reject button
+        function handleReject(eventId) {
+            var rejectForm = document.getElementById('rejectForm');
+            // Set the action attribute of the form dynamically based on the event ID
+            rejectForm.action = "/confirm_reject/" + eventId;
+            $('#rejectModal').modal('show'); // Show the modal
+        }
+
+        // Function to handle click event on Accept button
+        function handleAccept(eventId) {
+            var acceptForm = document.getElementById('acceptForm');
+            // Set the action attribute of the form dynamically based on the event ID
+            acceptForm.action = "/confirm_accept/" + eventId;
+            $('#acceptModal').modal('show'); // Show the modal
+        }
+    </script>
+</body>
+</html>

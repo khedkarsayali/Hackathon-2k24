@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Requests</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        /* Custom CSS for buttons */
+        .btn-group .btn {
+            margin-right: 5px; /* Adjust as needed */
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="{{ url_for('home') }}">Home</a>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('all_events') }}">All Events</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('approved_events') }}">Approved Events</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('pending_events') }}">Pending Events</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('rejected_events') }}">Rejected Events</a>
+                </li>
+            </ul>
+            <form class="form-inline my-2 my-lg-0" action="{{ url_for('hall_requests') }}" method="GET">
+                <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" name="q">
+                <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+            </form>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}" role="alert">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="container mt-5">
+        <h1>Requests</h1>
+        <table class="table">
+            <thead class="thead-light">
+                <tr>
+                    <th>Event Name</th>
+                    <th>Manager Name</th>
+                    <th>Event Date</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for request in all_hall_requests %}
+                <tr>
+                    <td>{{ request.event_name }}</td>
+                    <td>{{ request.manager_name }}</td>
+                    <td>{{ request.event_date }}</td>
+                    <td>{{ request.start_time }}</td>
+                    <td>{{ request.end_time }}</td>
+                    <td>{{ request.status }}</td>
+                    <td>
+                        <div class="btn-group" role="group" aria-label="Actions">
+                            <a href="{{ url_for('view_event', event_id=request.sno) }}" class="btn btn-primary">View</a>
+                            
+                             
+                            {% if request.status == 'pending' %}
+    <button onclick="handleReject({{ request.sno }})" class="btn btn-danger">Reject</button>
+    <button onclick="handleAccept({{ request.sno }})" class="btn btn-success">Accept</button>
+    {% else %}
+    <button class="btn btn-danger" disabled>Reject</button>
+    <button class="btn btn-success" disabled>Accept</button>
+    {% endif %}
+                           
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Modal for rejecting event -->
+    <div class="modal fade" id="rejectModal" tabindex="-1" role="dialog" aria-labelledby="rejectModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="rejectModalLabel">Reject Event</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-danger">Are you sure you want to reject this event?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <form id="rejectForm" action="" method="POST">
+                        <input type="hidden" name="action" value="reject">
+                        <button type="submit" class="btn btn-danger">Reject</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for accepting event -->
+    <div class="modal fade" id="acceptModal" tabindex="-1" role="dialog" aria-labelledby="acceptModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="acceptModalLabel">Accept Event</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-success">Are you sure you want to accept this event?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <form id="acceptForm" action="" method="POST">
+                        <input type="hidden" name="action" value="accept">
+                        <button type="submit" class="btn btn-success">Accept</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS bundle -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        // Function to handle click event on Reject button
+        function handleReject(eventId) {
+            var rejectForm = document.getElementById('rejectForm');
+            // Set the action attribute of the form dynamically based on the event ID
+            rejectForm.action = "/confirm_reject/" + eventId;
+            $('#rejectModal').modal('show'); // Show the modal
+        }
+
+        // Function to handle click event on Accept button
+        function handleAccept(eventId) {
+            var acceptForm = document.getElementById('acceptForm');
+            // Set the action attribute of the form dynamically based on the event ID
+            acceptForm.action = "/confirm_accept/" + eventId;
+            $('#acceptModal').modal('show'); // Show the modal
+        }
+    </script>
+</body>
+</html>

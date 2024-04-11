@@ -28,9 +28,9 @@
     <h1>Admin Users</h1>
 
     <!-- Search Users Form -->
-    <form action="/search_users" method="GET">
+    <form id="searchForm" action="/search_users" method="GET">
         <label for="search">Search:</label>
-        <input type="text" id="search" name="search">
+        <input type="text" id="search" name="search" value="{{ search_term }}">
         <button type="submit">Search</button>
     </form>
 
@@ -42,6 +42,14 @@
         {% endfor %}
     </ul>
 
-    
+    <script>
+        // Get the search input field
+        var searchInput = document.getElementById("search");
+
+        // Submit the form when the search term changes
+        searchInput.addEventListener("input", function() {
+            document.getElementById("searchForm").submit();
+        });
+    </script>
 </body>
 </html>

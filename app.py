@@ -4,6 +4,9 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail, Message
 import secrets
 import datetime
+import random
+import json
+from sqlalchemy import or_
 
 from flask_migrate import Migrate
 from flask_mail import Mail, Message
@@ -38,12 +41,14 @@ app.config['SESSION_SQLALCHEMY'] = db  # SQLAlchemy instance
 app.config['SECRET_KEY'] = 'HackHustlers'  # Secret key for session management
 
 # Configure email settings
-app.config['MAIL_SERVER'] = 'smtp.example.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'hackhustler58@gmail.com'
-app.config['MAIL_PASSWORD'] = 'hackhustler@6'
-app.config['MAIL_DEFAULT_SENDER'] = 'hackhustler58@gmail.com'
+app.config.update(
+    MAIL_SERVER = 'smtp.example.com',
+    MAIL_PORT = 587,
+    MAIL_USE_TLS = True,
+    MAIL_USERNAME = 'hackhustler58@gmail.com',
+    MAIL_PASSWORD = 'hackhustler@6',
+    MAIL_DEFAULT_SENDER = 'hackhustler58@gmail.com'
+)
 
 mail = Mail(app)
 
@@ -257,7 +262,7 @@ def search_users():
     search_term = request.args.get('search', '')
     # Search users by email
     users = User.query.filter(User.email.contains(search_term)).all()
-    return render_template('adminAddUsers.html', users=users)
+    return render_template('adminAddUsers.html', users=users,search_term=search_term)
 
 @app.route('/add_user', methods=['POST'])
 def add_user():
@@ -287,6 +292,273 @@ def add_user():
                 db.session.close()
 
     return render_template('adminAddUsers.html')
+
+@app.route("/forgotpass", methods=['GET', 'POST'])
+def forgot():
+    error=None
+    if request.method == 'POST':
+        email=request.form.get('email')
+        if not email:
+            error="Enter your email"
+        else:
+            otp = ''.join(random.choices('0123456789', k=5))
+            mail.send_message('OTP Request',
+                sender="hackhustlers.com",
+                recipients=[email],  # Pass email address as a list
+                body=f"Your OTP is {otp}.\n Do not share this OTP with anyone.")
+            # error="OTP sent to your email"
+            return render_template('file4(OTP).html')
+    return render_template('index.html',error=error)
+
+
+
+
+#vaishnavi code : 
+
+@app.route('/approve/<int:event_id>')
+def approve_event(event_id):
+    event = Event.query.get_or_404(event_id)
+    event.status = 'Accepted'
+    db.session.commit()
+    return redirect(url_for('hall_requests'))
+
+# Route to handle reject action
+@app.route('/reject/<int:event_id>')
+def reject_event(event_id):
+    event = Event.query.get_or_404(event_id)
+    event.status = 'Rejected'
+    db.session.commit()
+    return redirect(url_for('hall_requests'))
+
+
+
+
+@app.route('/')
+def home():
+    return "Hello"
+
+
+
+
+
+@app.route('/view_event/<int:event_id>')
+def view_event(event_id):
+    event = Event.query.get_or_404(event_id)
+    
+
+    return render_template('view.html', event=event)
+
+
+
+
+
+from datetime import datetime
+
+@app.route('/hall_requests', methods=['GET', 'POST'])
+def hall_requests():
+    search_query = request.args.get('q', '')
+
+    # Query the database to retrieve all requests
+    all_hall_requests = Event.query.filter(Event.event_date >= datetime.now())
+
+    # Filter events based on search criteria
+    if search_query:
+        all_hall_requests = all_hall_requests.filter(
+            or_(
+                Event.manager_name.ilike(f'%{search_query}%'),
+                Event.event_name.ilike(f'%{search_query}%'),
+                Event.department.ilike(f'%{search_query}%'),
+                Event.club_name.ilike(f'%{search_query}%')
+            )
+        )
+
+    all_hall_requests = all_hall_requests.all()
+
+    # Render the template with the filtered requests data
+    return render_template('display.html', all_hall_requests=all_hall_requests)
+
+@app.route('/all_events')
+def all_events():
+    # Query all events from the database
+    # all_events = Event.query.all()
+    all_events = Event.query.filter(Event.event_date >= datetime.now()).all()
+    return render_template('display.html', all_hall_requests=all_events, category='All Events')
+
+@app.route('/approved_events')
+def approved_events():
+    # Query approved events from the database
+    # approved_events = Event.query.filter_by(status='Accepted').all()
+    approved_events = Event.query.filter_by(status='Accepted').filter(Event.event_date >= datetime.now()).all()
+    return render_template('display.html', all_hall_requests=approved_events, category='Approved Events')
+
+
+
+
+@app.route('/pending_events')
+def pending_events():
+    # Query pending events from the database
+    # pending_events = Event.query.filter_by(status='Pending').all()
+    pending_events = Event.query.filter_by(status='Pending').filter(Event.event_date >= datetime.now()).all()
+    return render_template('display.html', all_hall_requests=pending_events, category='Pending Events')
+
+@app.route('/rejected_events')
+def rejected_events():
+    # Query rejected events from the database
+    # rejected_events = Event.query.filter_by(status='Rejected').all()
+    rejected_events = Event.query.filter_by(status='Rejected').filter(Event.event_date >= datetime.now()).all()
+    return render_template('display.html', all_hall_requests=rejected_events, category='Rejected Events')
+
+
+
+
+
+@app.route('/hall_requests_user', methods=['GET', 'POST'])
+def hall_requests_user():
+    search_query = request.args.get('q', '')
+
+    # Query the database to retrieve all requests
+    all_hall_requests = Event.query.filter(Event.event_date >= datetime.now())
+
+    # Filter events based on search criteria
+    if search_query:
+        all_hall_requests = all_hall_requests.filter(
+            or_(
+                Event.manager_name.ilike(f'%{search_query}%'),
+                Event.event_name.ilike(f'%{search_query}%'),
+                Event.department.ilike(f'%{search_query}%'),
+                Event.club_name.ilike(f'%{search_query}%')
+            )
+        )
+
+    all_hall_requests = all_hall_requests.all()
+
+    # Render the template with the filtered requests data
+    return render_template('user_display.html', all_hall_requests=all_hall_requests)
+
+
+
+@app.route('/view_event_user/<int:event_id>')
+def view_event_user(event_id):
+    event = Event.query.get_or_404(event_id)
+    
+
+    return render_template('user_view.html', event=event)
+
+
+@app.route('/cancel_event/<int:event_id>', methods=['POST'])
+def cancel_event(event_id):
+    if request.form['action'] == 'cancel':
+        event = Event.query.get_or_404(event_id)
+        db.session.delete(event)
+        db.session.commit()
+    return redirect(url_for('hall_requests_user'))
+
+
+@app.route('/all_events_user')
+def all_events_user():
+    # Query all events from the database
+    
+    all_events = Event.query.filter(Event.event_date >= datetime.now()).all()
+    return render_template('user_display.html', all_hall_requests=all_events, category='All Events')
+
+@app.route('/approved_events_user')
+def approved_events_user():
+    # Query approved events from the database
+    approved_events = Event.query.filter_by(status='Accepted').filter(Event.event_date >= datetime.now()).all()
+    return render_template('user_display.html', all_hall_requests=approved_events, category='Approved Events')
+
+@app.route('/pending_events_user')
+def pending_events_user():
+    # Query pending events from the database
+    pending_events = Event.query.filter_by(status='Pending').filter(Event.event_date >= datetime.now()).all()
+    return render_template('user_display.html', all_hall_requests=pending_events, category='Pending Events')
+
+@app.route('/rejected_events_user')
+def rejected_events_user():
+    # Query rejected events from the database
+    rejected_events = Event.query.filter_by(status='Rejected').filter(Event.event_date >= datetime.now()).all()
+    return render_template('user_display.html', all_hall_requests=rejected_events, category='Rejected Events')
+
+
+
+
+
+
+def is_overlapping(event_date, new_start_str, new_end_str, hall_name):
+    new_start = datetime.strptime(new_start_str, '%H:%M').time()
+    new_end = datetime.strptime(new_end_str, '%H:%M').time()
+
+    events = Event.query.filter_by(event_date=event_date, hall_name=hall_name).all()
+    for event in events:
+        # start_time = event.start_time.strftime('%H:%M')
+        # end_time = event.end_time.strftime('%H:%M')
+        if(event.status.lower()=="accepted"):
+            start_time = event.start_time
+            end_time = event.end_time
+            print(event.sno)
+            # start_time = datetime.strptime(start_time, '%H:%M').time()
+            # end_time = datetime.strptime(end_time, '%H:%M').time()
+
+            if (start_time <= new_start < end_time) or \
+            (start_time < new_end <= end_time) or \
+            (new_start <= start_time and new_end >= end_time):
+                return True
+    return False
+
+
+       
+
+
+
+
+
+
+
+
+@app.route('/confirm_cancel/<int:event_id>', methods=['POST'])
+def confirm_cancel(event_id):
+     if request.form['action'] == 'cancel':
+        event = Event.query.get_or_404(event_id)
+        db.session.delete(event)
+        db.session.commit()
+     return redirect(url_for('hall_requests_user'))
+
+@app.route('/confirm_accept/<int:event_id>', methods=['POST'])
+def confirm_accept(event_id):
+    if request.form['action'] == 'accept':
+        event = Event.query.get_or_404(event_id)
+        event_date = event.event_date
+        start_time = event.start_time  # Keep .time()
+        end_time = event.end_time # Keep .time()
+        hall_name = event.hall_name
+        if not is_overlapping(event_date, start_time.strftime('%H:%M'), end_time.strftime('%H:%M'), hall_name):
+            event.status = 'Accepted'
+            db.session.commit()
+            flash('Event has been accepted successfully!', 'success')
+            return redirect(url_for('hall_requests'))  # Pass status parameter here
+        else:
+            # Handle the case when there is an overlap
+            event.status = 'Rejected'
+            db.session.commit()
+            flash('Event has been rejected due to overlapping!', 'danger')
+            return redirect(url_for('hall_requests'))   # Pass status parameter here
+
+@app.route('/confirm_reject/<int:event_id>', methods=['POST'])
+def confirm_reject(event_id):
+    if request.form['action'] == 'reject':
+        event = Event.query.get_or_404(event_id)
+        event.status = 'Rejected'
+        db.session.commit()
+    return redirect(url_for('hall_requests'))  # Pass status parameter here
+
+
+
+
+
+
+
+# vaishnavi routes ended 
+
 
 if __name__ == '__main__':
     app.run(debug=True)
