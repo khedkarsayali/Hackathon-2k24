@@ -1,7 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for, session,flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail, Message
-from flask_login import login_required
+from flask_login import logout_user
+
 import secrets
 import datetime
 import random
@@ -39,6 +40,15 @@ mail = Mail(app)
 def my_index():
     return render_template("index.html", token="Hello Sayali")
 
+class islogin(db.Model):
+    sno = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(500), nullable=False,unique=True)
+
+@app.route('/logout')
+def logout():
+    db.session.query(islogin).delete()
+    db.session.commit()
+    return render_template('index.html')
 
 
 
@@ -83,7 +93,9 @@ class Venue(db.Model):
     features = db.Column(db.String(255))
 
 
-@app.route('/login', methods=['POST'])
+
+
+@app.route('/login', methods=['POST','GET'])
 def login():
     if request.method == 'POST':
         email = request.form['email']
@@ -97,6 +109,9 @@ def login():
             if user.password == password:
                 # If password matches, set session and redirect to dashboard
                 session['user_id'] = user.sno
+                new_islogin=islogin(email=email)
+                db.session.add(new_islogin)
+                db.session.commit()
                 flash('Login successful!', 'success')  # Flash message for successful login
                 return redirect(url_for('dashboard'))
             else:
@@ -295,8 +310,8 @@ def forgot():
 
 
 
-#vaishnavi code : 
-
+#vaishnavi code :
+ 
 @app.route('/approve/<int:event_id>')
 def approve_event(event_id):
     event = Event.query.get_or_404(event_id)
@@ -393,21 +408,21 @@ def rejected_events():
 
 
 @app.route('/hall_requests_user', methods=['GET', 'POST'])
-@login_required  # Ensure that the user is logged in
 def hall_requests_user():
     search_query = request.args.get('q', '')
-
-    # Ensure that the user's email is in the session
-    if 'email' not in session:
-        flash('Please log in to view your events', 'warning')
-        return redirect(url_for('login'))
-
-    user_email = session['email']  # Get the user's email from the session
-
+    
+    # Check if there are any entries in the islogin table
+    login = islogin.query.first()
+    if not login:
+        # If no entries, redirect to index.html
+        return redirect(url_for('my_index'))
+    
+    user_email = login.email
+   
     # Query the database to retrieve events associated with the user's email
     user_events = Event.query.filter_by(email=user_email)
-
-    # Apply additional filters based on search criteria
+    
+    # Filter events based on search criteria
     if search_query:
         user_events = user_events.filter(
             or_(
@@ -418,10 +433,19 @@ def hall_requests_user():
             )
         )
 
+    # Fetch all the filtered events
     user_events = user_events.all()
+    # Print the filtered events to the console for debugging
+    for event in user_events:
+        print(event.event_name)
+        
+    # Render the template with the filtered requests data
+    return render_template('user_display.html', user_events=user_events)
 
-    # Render the template with the filtered events data
-    return render_template('user_display.html', all_hall_requests=user_events)
+
+
+
+
 
 @app.route('/view_event_user/<int:event_id>')
 def view_event_user(event_id):
@@ -492,6 +516,15 @@ def is_overlapping(event_date, new_start_str, new_end_str, hall_name):
     return False
 
 
+       
+
+
+
+
+
+
+
+
 @app.route('/confirm_cancel/<int:event_id>', methods=['POST'])
 def confirm_cancel(event_id):
      if request.form['action'] == 'cancel':
@@ -527,7 +560,6 @@ def confirm_reject(event_id):
         event.status = 'Rejected'
         db.session.commit()
     return redirect(url_for('hall_requests'))  # Pass status parameter here
-
 
 
 
