@@ -7,7 +7,6 @@ import datetime
 
 from flask_migrate import Migrate
 from flask_mail import Mail, Message
-from mail import init_app, send_email
 import random
 from reportlab.pdfgen import canvas
 from io import BytesIO
@@ -15,7 +14,7 @@ import base64
 
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:@localhost/datahub'  # MySQL database URL
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:root@localhost/datahub'  # MySQL database URL
 
 
 app.config.update(
@@ -342,9 +341,11 @@ def send_mail():
 
             # Attach PDF to email
             msg = Message(subject,
-                          sender=("Your Name", "your-email@example.com"),
+                          sender=("Your Name", "hackhustler58@gmail.com"),
                           recipients=[email])
             msg.body = message
+
+            
             msg.attach("document.pdf", "application/pdf", pdf_buffer.getvalue())
 
             # Send email
