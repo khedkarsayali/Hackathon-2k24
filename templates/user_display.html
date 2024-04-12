@@ -53,18 +53,18 @@
                 </tr>
             </thead>
             <tbody>
-                {% for request in all_hall_requests %}
+                {% for event in user_events %}
                 <tr>
-                    <td>{{ request.event_name }}</td>
-                    <td>{{ request.manager_name }}</td>
-                    <td>{{ request.event_date }}</td>
-                    <td>{{ request.start_time }}</td>
-                    <td>{{ request.end_time }}</td>
-                    <td>{{ request.status }}</td>
+                    <td>{{ event.event_name }}</td>
+                    <td>{{ event.manager_name }}</td>
+                    <td>{{ event.event_date }}</td>
+                    <td>{{ event.start_time }}</td>
+                    <td>{{ event.end_time }}</td>
+                    <td>{{ event.status }}</td>
                     <td>
                         <div class="btn-group" role="group" aria-label="Actions">
-                            <a href="{{ url_for('view_event_user', event_id=request.sno) }}" class="btn btn-primary">View</a>
-                            <button onclick="handleCancel({{ request.sno }})" class="btn btn-secondary">Cancel</button>
+                            <a href="{{ url_for('view_event_user', event_id=event.sno) }}" class="btn btn-primary">View</a>
+                            <button onclick="handleCancel({{ event.sno }})" class="btn btn-secondary">Cancel</button>
                         </div>
                     </td>
                 </tr>
