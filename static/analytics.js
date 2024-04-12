@@ -54,6 +54,3 @@ function createPie(dataElement, pieElement) {
   }
 }
 createPie(".pieID.legend", ".pieID.pie");
-
-
-Resources1× 0.5× 0.25×Rerun

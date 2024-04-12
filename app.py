@@ -1,7 +1,6 @@
-from flask import Flask, render_template, request, redirect, url_for, session,flash
+from flask import Flask, render_template, request, redirect, url_for, session,flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail, Message
-from flask_login import login_required
 import secrets
 import datetime
 import random
@@ -94,7 +93,17 @@ class Venue(db.Model):
     name = db.Column(db.String(255))
     capacity = db.Column(db.Integer)
     features = db.Column(db.String(255))
+    imgfile = db.Column(db.String(255))
 
+class islogin(db.Model):
+    sno = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(500), nullable=False,unique=True)
+
+@app.route('/logout')
+def logout():
+    db.session.query(islogin).delete()
+    db.session.commit()
+    return render_template('index.html')
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -326,25 +335,12 @@ def reject_event(event_id):
     return redirect(url_for('hall_requests'))
 
 
-
-
-@app.route('/')
-def home():
-    return "Hello"
-
-
-
-
-
 @app.route('/view_event/<int:event_id>')
 def view_event(event_id):
     event = Event.query.get_or_404(event_id)
     
 
     return render_template('view.html', event=event)
-
-
-
 
 
 from datetime import datetime
@@ -406,7 +402,6 @@ def rejected_events():
 
 
 @app.route('/hall_requests_user', methods=['GET', 'POST'])
-@login_required  # Ensure that the user is logged in
 def hall_requests_user():
     search_query = request.args.get('q', '')
 
@@ -483,7 +478,7 @@ def rejected_events_user():
 
 
 
-def is_overlapping(event_date, new_start_str, new_end_str, hall_name):
+def vis_overlapping(event_date, new_start_str, new_end_str, hall_name):
     new_start = datetime.strptime(new_start_str, '%H:%M').time()
     new_end = datetime.strptime(new_end_str, '%H:%M').time()
 
@@ -521,7 +516,7 @@ def confirm_accept(event_id):
         start_time = event.start_time  # Keep .time()
         end_time = event.end_time # Keep .time()
         hall_name = event.hall_name
-        if not is_overlapping(event_date, start_time.strftime('%H:%M'), end_time.strftime('%H:%M'), hall_name):
+        if not vis_overlapping(event_date, start_time.strftime('%H:%M'), end_time.strftime('%H:%M'), hall_name):
             event.status = 'Accepted'
             db.session.commit()
             flash('Event has been accepted successfully!', 'success')
@@ -548,13 +543,6 @@ def confirm_reject(event_id):
 
 
 # vaishnavi routes ended 
-
-
-if __name__ == '__main__':
-    app.run(debug=True)
-
-
-    imgfile = db.Column(db.String(255))
 
 @app.route("/home")
 def home():
@@ -621,8 +609,6 @@ def addvenue():
     return render_template('addvenue.html', params=params)
 
 
-
-
 @app.route("/analytics")
 def analytics():
     total_venues = Venue.query.count()
@@ -632,6 +618,103 @@ def analytics():
     recent_bookings = Event.query.filter_by(status='accepted').order_by(desc(Event.request)).limit(5).all()
     return render_template("analytics.html", total_venues=total_venues, total_bookings=total_bookings, total_users=total_users,recent_bookings=recent_bookings)
 
+@app.route('/booking_form', methods=['GET', 'POST'])
+def booking_form():
+    if request.method == 'POST':
+        # Handle form submission
+        event_name = request.form['eventName']
+        manager_name = request.form['eventManagerName']
+        club_name = request.form['orgClubName']
+        event_date = request.form['eventDate']
+        start_time = request.form['startTime']
+        end_time = request.form['endTime']
+        hall_name = request.form['hallName']  # Retrieve hall name from the form
+        email = request.form['email']
+        ph_num = request.form['phoneNumber']
+        department = request.form['department']
+        request_text = request.form['requestCreatedAt']
+
+        status = "pending"
+        # Check for event overlap at the same venue
+        if not is_overlapping(event_date, start_time, end_time, hall_name):
+            # Add new event to the database
+            new_event = Event(event_name=event_name, manager_name=manager_name, club_name=club_name, event_date=event_date,
+                              start_time=start_time, end_time=end_time, hall_name=hall_name, email=email,
+                              ph_num=ph_num, department=department, request=request_text,status=status)
+            db.session.add(new_event)
+            db.session.commit()
+            return "Event added successfully!"
+        else:
+            return "The event overlaps with an existing event at the same venue. Please choose another time."
+
+    # Fetch all venues from the Venue table
+    venues = Venue.query.all()
+    return render_template('overlap.html', venues=venues)
+
+
+
+def is_overlapping(event_date, new_start_str, new_end_str, hall_name):
+    new_start = datetime.strptime(new_start_str, '%H:%M').time()
+    new_end = datetime.strptime(new_end_str, '%H:%M').time()
+
+    events = Event.query.filter_by(event_date=event_date, hall_name=hall_name,status='accepted').all()
+    for event in events:
+        start_time = event.start_time.strftime('%H:%M')
+        end_time = event.end_time.strftime('%H:%M')
+
+        start_time = datetime.strptime(start_time, '%H:%M').time()
+        end_time = datetime.strptime(end_time, '%H:%M').time()
+
+        if (start_time <= new_start < end_time) or \
+           (start_time < new_end <= end_time) or \
+           (new_start <= start_time and new_end >= end_time):
+            return True
+    return False
+
+
+
+@app.route('/calendar1',methods=['POST'])
+def calendar1():
+    return render_template('calendar1.html')
+
+
+@app.route('/fetch-events', methods=['POST'])
+def fetch_events():
+    try:
+        selected_date_str = request.json.get('selectedDate')
+        selected_datetime = datetime.fromisoformat(selected_date_str)
+        selected_date = selected_datetime.date()
+
+        print(selected_date)
+
+        # Query events from the database for the selected date
+        events = Event.query.filter_by(event_date=selected_date,status='accepted').all()
+
+        # Convert event objects to dictionary format
+        event_list = []
+        for event in events:
+            print(event.event_name)
+            event_data = {
+                'event_name': event.event_name,
+                'manager_name': event.manager_name,
+                'club_name': event.club_name,
+                'start_time': event.start_time.strftime('%H:%M'),
+                'end_time': event.end_time.strftime('%H:%M'),
+                'hall_name': event.hall_name,
+                'email': event.email,
+                'ph_num': event.ph_num,
+                'department': event.department,
+                'status': event.status
+            }
+            event_list.append(event_data)
+            for i in event_list:
+                print(i)
+        return jsonify({'events': event_list})
+
+    except Exception as e:
+        # Handle the exception
+        print(f"An error occurred: {e}")
+        return jsonify({'error': 'An error occurred while fetching events'}), 500
 
 
 

@@ -37,7 +37,7 @@ class Venue(db.Model):
 
 with app.app_context():
     db.create_all()  # Create tables based on the defined models
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/booking_form', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
         # Handle form submission
